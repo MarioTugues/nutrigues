@@ -2,7 +2,9 @@
 //  NutriGues — app.js (con backend MySQL)
 // ═══════════════════════════════════════
 
-const API = 'http://localhost:3000/api';
+const API = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
+  ? 'http://localhost:3000/api'
+  : window.location.origin + '/api';
 
 // ─── ESTADO GLOBAL ───────────────────
 let usuario = {};
