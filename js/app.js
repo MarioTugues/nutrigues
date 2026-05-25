@@ -1,23 +1,21 @@
-// ═══════════════════════════════════════
-//  NutriGues — app.js (con backend MySQL)
-// ═══════════════════════════════════════
-
+// url de la api, dependiendo de si estamos en local o en produccion
 const API = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
   ? 'http://localhost:3000/api'
   : window.location.origin + '/api';
 
-// ─── ESTADO GLOBAL ───────────────────
+// variables globales de la app
 let usuario = {};
 let registrosPeso = [];
 let planActual = 'nutricion';
 let chartInstance = null;
 
-// ─── NAVEGACIÓN ──────────────────────
+// muestra la pantalla que le pasamos y oculta las demas
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('screen-' + id).classList.add('active');
 }
 
+// navegacion entre tabs, con logica extra para tienda y perfil
 function showTab(tab) {
   showScreen(tab);
   if (tab === 'tienda') {
@@ -27,10 +25,7 @@ function showTab(tab) {
   if (tab === 'perfil') abrirPerfil();
 }
 
-// ═══════════════════════════════════════
-//  AUTH
-// ═══════════════════════════════════════
-
+// registro de nuevo usuario, recoge los datos del formulario y los manda al servidor
 async function registrar() {
   const nombre   = document.getElementById('reg-nombre').value.trim();
   const email    = document.getElementById('reg-email').value.trim();
@@ -61,6 +56,7 @@ async function registrar() {
     const data = await res.json();
     if (!res.ok) { mostrarError('reg-error', data.error); return; }
     usuario = data.usuario || data;
+    // guardamos el token jwt para las siguientes peticiones
     if (data.token) localStorage.setItem('nutrigues-token', data.token);
     guardarSesion();
     await cargarPesos();
@@ -72,6 +68,7 @@ async function registrar() {
   }
 }
 
+// login: manda email y password, recibe el token y los datos del usuario
 async function login() {
   const email    = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
@@ -98,6 +95,7 @@ async function login() {
   }
 }
 
+// limpia todo y vuelve al inicio
 function cerrarSesion() {
   usuario = {};
   registrosPeso = [];
@@ -106,14 +104,17 @@ function cerrarSesion() {
   showScreen('landing');
 }
 
+// guarda solo el id y nombre en localStorage para recuperar la sesion al recargar
 function guardarSesion() {
   localStorage.setItem('nutrigues-sesion', JSON.stringify({ id: usuario.id, nombre: usuario.nombre }));
 }
 
+// devuelve el token guardado o string vacio si no hay
 function getToken() {
   return localStorage.getItem('nutrigues-token') || '';
 }
 
+// cabeceras con el token jwt para las peticiones protegidas
 function authHeaders() {
   return {
     'Content-Type': 'application/json',
@@ -121,10 +122,7 @@ function authHeaders() {
   };
 }
 
-// ═══════════════════════════════════════
-//  DASHBOARD
-// ═══════════════════════════════════════
-
+// rellena el dashboard con los datos del usuario logueado
 function cargarDashboard() {
   document.getElementById('dash-nombre').textContent   = usuario.nombre;
   document.getElementById('nav-nombre').textContent    = usuario.nombre;
@@ -134,6 +132,7 @@ function cargarDashboard() {
   document.getElementById('dash-altura').textContent   = usuario.altura || '—';
   document.getElementById('dash-objetivo').textContent = usuario.objetivo || '—';
 
+  // calculo del imc: peso / altura^2
   if (usuario.peso && usuario.altura) {
     const imc = (usuario.peso / Math.pow(usuario.altura / 100, 2)).toFixed(1);
     document.getElementById('dash-imc').textContent = imc;
@@ -144,10 +143,7 @@ function cargarDashboard() {
   renderPlanes();
 }
 
-// ═══════════════════════════════════════
-//  PLANES IA
-// ═══════════════════════════════════════
-
+// configuracion de los tres tipos de plan con sus prompts para la ia
 const planConfig = {
   nutricion: {
     titulo: 'Plan de Nutrición',
@@ -176,6 +172,7 @@ Consejos sobre hábitos, sueño, hidratación y motivación.`
   }
 };
 
+// cambia el tipo de plan activo y resetea el resultado anterior
 function setPlanType(tipo) {
   planActual = tipo;
   document.querySelectorAll('.plan-btn').forEach(b => b.classList.remove('active'));
@@ -186,6 +183,8 @@ function setPlanType(tipo) {
   document.getElementById('result-box').textContent  = '';
 }
 
+// llama al servidor que hace de proxy hacia la api de anthropic
+// el resultado lo renderiza como markdown y lo guarda en bd
 async function generarPlan() {
   if (!usuario.nombre) { alert('Inicia sesión primero.'); return; }
 
@@ -207,7 +206,7 @@ async function generarPlan() {
     } else {
       const texto = data.content[0].text;
       resultBox.innerHTML = marked.parse(texto);
-      // Guardar plan en la base de datos
+      // guardamos el plan para poder consultarlo despues desde el dashboard
       if (usuario.id) {
         await fetch(`${API}/plan`, {
           method: 'POST',
@@ -227,10 +226,7 @@ async function generarPlan() {
   }
 }
 
-// ═══════════════════════════════════════
-//  SEGUIMIENTO DE PESO
-// ═══════════════════════════════════════
-
+// guarda un nuevo registro de peso en la bd
 async function registrarPeso() {
   const peso  = parseFloat(document.getElementById('track-peso').value);
   const fecha = document.getElementById('track-fecha').value;
@@ -252,6 +248,7 @@ async function registrarPeso() {
   }
 }
 
+// borra un registro de peso por id
 async function eliminarPeso(id) {
   if (!confirm('¿Eliminar este registro?')) return;
   try {
@@ -265,6 +262,7 @@ async function eliminarPeso(id) {
   }
 }
 
+// pide al servidor el historial de pesos del usuario
 async function cargarPesos() {
   if (!usuario.id) return;
   try {
@@ -272,10 +270,11 @@ async function cargarPesos() {
     const data = await res.json();
     registrosPeso = data.map(r => ({ id: r.id, peso: r.peso, fecha: r.fecha.split('T')[0] }));
   } catch (err) {
-    console.error('Error cargando pesos:', err);
+    console.error('error cargando pesos:', err);
   }
 }
 
+// pinta el historial de pesos y la grafica con chart.js
 function renderPesos() {
   const list = document.getElementById('progress-list');
   if (registrosPeso.length === 0) {
@@ -286,6 +285,7 @@ function renderPesos() {
 
   list.innerHTML = registrosPeso.map((r, i) => {
     let diff = '';
+    // calculamos la diferencia respecto al registro anterior
     if (i < registrosPeso.length - 1) {
       const d = (r.peso - registrosPeso[i + 1].peso).toFixed(1);
       diff = `<span class="diff ${d > 0 ? 'positive' : 'negative'}">${d > 0 ? '+' : ''}${d} kg</span>`;
@@ -299,8 +299,8 @@ function renderPesos() {
   }).join('');
 
   document.getElementById('chart-area').style.display = 'block';
-  const sorted = [...registrosPeso].reverse();
-  if (chartInstance) chartInstance.destroy();
+  const sorted = [...registrosPeso].reverse(); // ordenamos de mas antiguo a mas nuevo para la grafica
+  if (chartInstance) chartInstance.destroy(); // destruimos la instancia anterior si existe
   chartInstance = new Chart(document.getElementById('weightChart'), {
     type: 'line',
     data: {
@@ -322,22 +322,20 @@ function renderPesos() {
   });
 }
 
-// ═══════════════════════════════════════
-//  PLANES GUARDADOS
-// ═══════════════════════════════════════
-
 let planesGuardados = [];
 
+// carga los planes guardados del usuario desde la bd
 async function cargarPlanes() {
   if (!usuario.id) return;
   try {
     const res = await fetch(`${API}/plan/${usuario.id}`, { headers: authHeaders() });
     planesGuardados = await res.json();
   } catch (err) {
-    console.error('Error cargando planes:', err);
+    console.error('error cargando planes:', err);
   }
 }
 
+// pinta las tarjetas de planes guardados en el dashboard
 function renderPlanes() {
   const cont = document.getElementById('planes-guardados');
   if (!cont) return;
@@ -347,7 +345,7 @@ function renderPlanes() {
     return;
   }
 
-  const iconos = { nutricion: '🥗', entrenamiento: '💪', consejos: '💡' };
+  const iconos  = { nutricion: '🥗', entrenamiento: '💪', consejos: '💡' };
   const nombres = { nutricion: 'Nutrición', entrenamiento: 'Entrenamiento', consejos: 'Consejos' };
 
   cont.innerHTML = planesGuardados.map(p => `
@@ -365,13 +363,14 @@ function renderPlanes() {
   `).join('');
 }
 
+// abre el modal con el contenido completo del plan seleccionado
 function verPlanGuardado(id) {
   const plan = planesGuardados.find(p => p.id === id);
   if (!plan) return;
-  const iconos = { nutricion: '🥗', entrenamiento: '💪', consejos: '💡' };
+  const iconos  = { nutricion: '🥗', entrenamiento: '💪', consejos: '💡' };
   const nombres = { nutricion: 'Nutrición', entrenamiento: 'Entrenamiento', consejos: 'Consejos' };
-  document.getElementById('modal-plan-titulo').textContent = `${iconos[plan.tipo]} ${nombres[plan.tipo]}`;
-  document.getElementById('modal-plan-fecha').textContent = new Date(plan.creado_en).toLocaleDateString('es-ES', { day:'numeric', month:'long', year:'numeric' });
+  document.getElementById('modal-plan-titulo').textContent  = `${iconos[plan.tipo]} ${nombres[plan.tipo]}`;
+  document.getElementById('modal-plan-fecha').textContent   = new Date(plan.creado_en).toLocaleDateString('es-ES', { day:'numeric', month:'long', year:'numeric' });
   document.getElementById('modal-plan-contenido').innerHTML = marked.parse(plan.contenido);
   document.getElementById('modal-plan').classList.add('visible');
 }
@@ -380,10 +379,7 @@ function cerrarModalPlan() {
   document.getElementById('modal-plan').classList.remove('visible');
 }
 
-// ═══════════════════════════════════════
-//  TIENDA
-// ═══════════════════════════════════════
-
+// lista de productos de la tienda con sus datos
 const productos = [
   { id: 1, icon: '💪', nombre: 'Proteína Whey', desc: 'Proteína de suero de alta calidad. 25g de proteína por dosis. Sabor chocolate.', precio: 34.99, img: 'assets/img/whey.png', badge: 'Más vendido' },
   { id: 2, icon: '⚡', nombre: 'Creatina Monohidrato', desc: 'Mejora el rendimiento y la fuerza muscular. 300g formato ahorro.', precio: 19.99, img: 'assets/img/creatina.png', badge: null },
@@ -397,6 +393,7 @@ const productos = [
 
 let carrito = [];
 
+// genera las tarjetas de producto en el grid de la tienda
 function renderProductos() {
   const grid = document.getElementById('productos-grid');
   if (!grid) return;
@@ -418,6 +415,7 @@ function renderProductos() {
   `).join('');
 }
 
+// añade un producto al carrito, si ya esta incrementa la cantidad
 function addCarrito(id) {
   const prod = productos.find(p => p.id === id);
   const existing = carrito.find(c => c.id === id);
@@ -426,11 +424,12 @@ function addCarrito(id) {
   actualizarCarritoBar();
 }
 
+// actualiza el boton flotante del carrito con el total y numero de productos
 function actualizarCarritoBar() {
-  const bar = document.getElementById('carrito-bar');
+  const bar   = document.getElementById('carrito-bar');
   const total = carrito.reduce((s, c) => s + c.precio * c.cantidad, 0);
   const count = carrito.reduce((s, c) => s + c.cantidad, 0);
-  document.getElementById('carrito-count').textContent = count;
+  document.getElementById('carrito-count').textContent     = count;
   document.getElementById('carrito-total-bar').textContent = total.toFixed(2) + '€';
   bar.classList.toggle('visible', carrito.length > 0);
 }
@@ -447,6 +446,7 @@ function cerrarCarrito() {
   document.getElementById('modal-carrito').classList.remove('visible');
 }
 
+// pinta los items del carrito en el modal
 function renderCarrito() {
   const items = document.getElementById('carrito-items');
   const total = carrito.reduce((s, c) => s + c.precio * c.cantidad, 0);
@@ -467,10 +467,12 @@ function removeCarrito(id) {
   renderCarrito();
 }
 
+// muestra el formulario de datos de envio
 function mostrarFormPedido() {
   if (carrito.length === 0) { alert('El carrito está vacío.'); return; }
   document.getElementById('vista-carrito').style.display = 'none';
   document.getElementById('pedido-form').classList.add('visible');
+  // rellenamos con los datos del usuario si estan disponibles
   if (usuario.email)  document.getElementById('ped-email').value  = usuario.email;
   if (usuario.nombre) document.getElementById('ped-nombre').value = usuario.nombre;
 }
@@ -480,6 +482,7 @@ function volverCarrito() {
   document.getElementById('vista-carrito').style.display = 'block';
 }
 
+// valida los campos y muestra la confirmacion del pedido
 function confirmarPedido() {
   const nombre    = document.getElementById('ped-nombre').value.trim();
   const direccion = document.getElementById('ped-direccion').value.trim();
@@ -495,25 +498,23 @@ function limpiarCarrito() {
   actualizarCarritoBar();
 }
 
-// ═══════════════════════════════════════
-//  PERFIL
-// ═══════════════════════════════════════
-
+// rellena el formulario de edicion con los datos actuales del usuario
 function abrirPerfil() {
   const n5 = document.getElementById('nav-nombre5');
   if (n5) n5.textContent = usuario.nombre || '—';
-  document.getElementById('edit-nombre').value         = usuario.nombre || '';
-  document.getElementById('edit-edad').value           = usuario.edad || '';
-  document.getElementById('edit-peso').value           = usuario.peso || '';
-  document.getElementById('edit-altura').value         = usuario.altura || '';
-  document.getElementById('edit-sexo').value           = usuario.sexo || 'hombre';
-  document.getElementById('edit-actividad').value      = usuario.actividad || 'moderado';
-  document.getElementById('edit-objetivo').value       = usuario.objetivo || 'mantenimiento';
-  document.getElementById('edit-restricciones').value  = usuario.restricciones || 'ninguna';
-  document.getElementById('edit-error').style.display  = 'none';
-  document.getElementById('edit-ok').style.display     = 'none';
+  document.getElementById('edit-nombre').value        = usuario.nombre || '';
+  document.getElementById('edit-edad').value          = usuario.edad || '';
+  document.getElementById('edit-peso').value          = usuario.peso || '';
+  document.getElementById('edit-altura').value        = usuario.altura || '';
+  document.getElementById('edit-sexo').value          = usuario.sexo || 'hombre';
+  document.getElementById('edit-actividad').value     = usuario.actividad || 'moderado';
+  document.getElementById('edit-objetivo').value      = usuario.objetivo || 'mantenimiento';
+  document.getElementById('edit-restricciones').value = usuario.restricciones || 'ninguna';
+  document.getElementById('edit-error').style.display = 'none';
+  document.getElementById('edit-ok').style.display    = 'none';
 }
 
+// guarda los cambios del perfil en la bd y actualiza el estado local
 async function guardarPerfil() {
   const datos = {
     nombre:        document.getElementById('edit-nombre').value.trim(),
@@ -535,7 +536,7 @@ async function guardarPerfil() {
       body: JSON.stringify(datos)
     });
     if (!res.ok) { mostrarError('edit-error', 'Error al guardar.'); return; }
-    Object.assign(usuario, datos);
+    Object.assign(usuario, datos); // actualizamos el objeto local
     guardarSesion();
     cargarDashboard();
     document.getElementById('edit-error').style.display = 'none';
@@ -545,23 +546,21 @@ async function guardarPerfil() {
   }
 }
 
-// ═══════════════════════════════════════
-//  UTILIDADES
-// ═══════════════════════════════════════
-
+// muestra un mensaje de error en el elemento con el id dado
 function mostrarError(id, msg) {
   const el = document.getElementById(id);
   if (el) { el.textContent = msg; el.style.display = 'block'; }
 }
 
+// al cargar la pagina intentamos recuperar la sesion guardada
 window.onload = async () => {
   document.getElementById('track-fecha').value = new Date().toISOString().split('T')[0];
 
-  // Recuperar sesión guardada
   const sesion = localStorage.getItem('nutrigues-sesion');
   if (sesion) {
     const { id } = JSON.parse(sesion);
     try {
+      // pedimos el perfil completo al servidor con el token guardado
       const res = await fetch(`${API}/usuario/${id}`, { headers: authHeaders() });
       if (res.ok) {
         usuario = await res.json();
@@ -570,12 +569,13 @@ window.onload = async () => {
         cargarDashboard();
         showScreen('dashboard');
       } else {
+        // si el token ha expirado limpiamos la sesion
         localStorage.removeItem('nutrigues-sesion');
-  localStorage.removeItem('nutrigues-token');
+        localStorage.removeItem('nutrigues-token');
       }
     } catch (err) {
       localStorage.removeItem('nutrigues-sesion');
-  localStorage.removeItem('nutrigues-token');
+      localStorage.removeItem('nutrigues-token');
     }
   }
 };

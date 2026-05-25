@@ -7,16 +7,15 @@ const jwt     = require('jsonwebtoken');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
-// ─── CLAVES ───────────────────────────
+// claves desde variables de entorno, nunca hardcodeadas en produccion
 const ANTHROPIC_KEY = process.env.ANTHROPIC_KEY || '';
-const JWT_SECRET    = process.env.JWT_SECRET    || 'nutrigues_secret_2026';
+const JWT_SECRET    = process.env.JWT_SECRET || 'nutrigues_secret_2026';
 
-// ─── MIDDLEWARE ───────────────────────
 app.use(cors());
 app.use(express.json());
-app.use(express.static('.'));
+app.use(express.static('.')); // sirve los archivos estaticos del frontend
 
-// ─── CONEXIÓN A MYSQL ─────────────────
+// conexion a mysql, los datos vienen de variables de entorno en produccion
 const db = mysql2.createConnection({
   host:     process.env.DB_HOST     || 'localhost',
   user:     process.env.DB_USER     || 'root',
@@ -25,12 +24,12 @@ const db = mysql2.createConnection({
 });
 
 db.connect((err) => {
-  if (err) { console.error('❌ Error conectando a MySQL:', err.message); return; }
-  console.log('✅ Conectado a MySQL');
+  if (err) { console.error('error mysql:', err.message); return; }
+  console.log('mysql ok');
   crearTablas();
 });
 
-// ─── CREAR TABLAS ─────────────────────
+// crea las tablas si no existen, asi no hay que hacerlo manualmente
 function crearTablas() {
   const sqlUsuarios = `
     CREATE TABLE IF NOT EXISTS usuarios (
@@ -65,12 +64,13 @@ function crearTablas() {
       FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
     )`;
 
-  db.query(sqlUsuarios, (err) => { if (err) console.error('❌ usuarios:', err.message); else console.log('✅ Tabla usuarios lista'); });
-  db.query(sqlPesos,    (err) => { if (err) console.error('❌ pesos:', err.message);    else console.log('✅ Tabla registros_peso lista'); });
-  db.query(sqlPlanes,   (err) => { if (err) console.error('❌ planes:', err.message);   else console.log('✅ Tabla planes lista'); });
+  db.query(sqlUsuarios, (err) => { if (err) console.error('error tabla usuarios:', err.message); });
+  db.query(sqlPesos,    (err) => { if (err) console.error('error tabla pesos:', err.message); });
+  db.query(sqlPlanes,   (err) => { if (err) console.error('error tabla planes:', err.message); });
 }
 
-// ─── MIDDLEWARE JWT ───────────────────
+// middleware que comprueba el token jwt en las rutas protegidas
+// si el token no es valido devuelve 401
 function verificarToken(req, res, next) {
   const auth = req.headers['authorization'];
   if (!auth) return res.status(401).json({ error: 'Token requerido' });
@@ -78,27 +78,14 @@ function verificarToken(req, res, next) {
   if (!token) return res.status(401).json({ error: 'Token requerido' });
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.usuarioId = decoded.id;
+    req.usuarioId = decoded.id; // guardamos el id para usarlo en las rutas
     next();
   } catch (err) {
     return res.status(401).json({ error: 'Token inválido o expirado' });
   }
 }
 
-// ─── MIDDLEWARE: verificar que el recurso pertenece al usuario ───
-function verificarPropietario(req, res, next) {
-  const idParam = parseInt(req.params.usuario_id || req.params.id);
-  if (req.usuarioId !== idParam) {
-    return res.status(403).json({ error: 'Acceso denegado' });
-  }
-  next();
-}
-
-// ══════════════════════════════════════
-//  RUTAS PÚBLICAS (sin token)
-// ══════════════════════════════════════
-
-// ─── REGISTRO ────────────────────────
+// registro: hashea la contrasena con bcrypt antes de guardarla
 app.post('/api/registro', async (req, res) => {
   const { nombre, email, password, edad, sexo, peso, altura, actividad, objetivo, restricciones } = req.body;
   if (!nombre || !email || !password) return res.status(400).json({ error: 'Nombre, email y contraseña son obligatorios' });
@@ -110,13 +97,14 @@ app.post('/api/registro', async (req, res) => {
         if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ error: 'Ese email ya está registrado' });
         return res.status(500).json({ error: 'Error al registrar usuario' });
       }
+      // devolvemos el token y todos los datos para no tener que hacer otra peticion
       const token = jwt.sign({ id: result.insertId }, JWT_SECRET, { expiresIn: '7d' });
       res.json({ ok: true, token, usuario: { id: result.insertId, nombre, email, edad, sexo, peso, altura, actividad, objetivo, restricciones } });
     });
   } catch (err) { res.status(500).json({ error: 'Error interno' }); }
 });
 
-// ─── LOGIN ────────────────────────────
+// login: compara la contrasena con el hash guardado usando bcrypt.compare
 app.post('/api/login', (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email y contraseña son obligatorios' });
@@ -126,17 +114,13 @@ app.post('/api/login', (req, res) => {
     const usuario = results[0];
     const ok = await bcrypt.compare(password, usuario.password);
     if (!ok) return res.status(401).json({ error: 'Email o contraseña incorrectos' });
-    delete usuario.password;
+    delete usuario.password; // nunca mandamos la contrasena al cliente
     const token = jwt.sign({ id: usuario.id }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ ok: true, token, usuario });
   });
 });
 
-// ══════════════════════════════════════
-//  RUTAS PROTEGIDAS (requieren token)
-// ══════════════════════════════════════
-
-// ─── PERFIL ───────────────────────────
+// devuelve el perfil del usuario, solo si el token corresponde al mismo id
 app.get('/api/usuario/:id', verificarToken, (req, res) => {
   if (req.usuarioId !== parseInt(req.params.id)) return res.status(403).json({ error: 'Acceso denegado' });
   db.query('SELECT id, nombre, email, edad, sexo, peso, altura, actividad, objetivo, restricciones FROM usuarios WHERE id = ?', [req.params.id], (err, results) => {
@@ -146,6 +130,7 @@ app.get('/api/usuario/:id', verificarToken, (req, res) => {
   });
 });
 
+// actualiza los datos del perfil, solo el propio usuario puede modificarlo
 app.put('/api/usuario/:id', verificarToken, (req, res) => {
   if (req.usuarioId !== parseInt(req.params.id)) return res.status(403).json({ error: 'Acceso denegado' });
   const { nombre, edad, sexo, peso, altura, actividad, objetivo, restricciones } = req.body;
@@ -156,7 +141,7 @@ app.put('/api/usuario/:id', verificarToken, (req, res) => {
   });
 });
 
-// ─── PESOS ────────────────────────────
+// guarda un nuevo registro de peso
 app.post('/api/peso', verificarToken, (req, res) => {
   const { usuario_id, peso, fecha } = req.body;
   if (req.usuarioId !== parseInt(usuario_id)) return res.status(403).json({ error: 'Acceso denegado' });
@@ -166,6 +151,7 @@ app.post('/api/peso', verificarToken, (req, res) => {
   });
 });
 
+// devuelve el historial de pesos ordenado por fecha descendente
 app.get('/api/peso/:usuario_id', verificarToken, (req, res) => {
   if (req.usuarioId !== parseInt(req.params.usuario_id)) return res.status(403).json({ error: 'Acceso denegado' });
   db.query('SELECT * FROM registros_peso WHERE usuario_id = ? ORDER BY fecha DESC', [req.params.usuario_id], (err, results) => {
@@ -174,8 +160,8 @@ app.get('/api/peso/:usuario_id', verificarToken, (req, res) => {
   });
 });
 
+// borra un registro de peso, verificando primero que pertenece al usuario
 app.delete('/api/peso/:id', verificarToken, (req, res) => {
-  // Verificar que el registro pertenece al usuario
   db.query('SELECT usuario_id FROM registros_peso WHERE id = ?', [req.params.id], (err, results) => {
     if (err) return res.status(500).json({ error: 'Error al eliminar peso' });
     if (results.length === 0) return res.status(404).json({ error: 'Registro no encontrado' });
@@ -187,7 +173,8 @@ app.delete('/api/peso/:id', verificarToken, (req, res) => {
   });
 });
 
-// ─── PLANES ───────────────────────────
+// guarda un plan generado por ia, borrando el anterior del mismo tipo
+// asi cada usuario solo tiene un plan de cada tipo guardado
 app.post('/api/plan', verificarToken, (req, res) => {
   const { usuario_id, tipo, contenido } = req.body;
   if (req.usuarioId !== parseInt(usuario_id)) return res.status(403).json({ error: 'Acceso denegado' });
@@ -200,6 +187,7 @@ app.post('/api/plan', verificarToken, (req, res) => {
   });
 });
 
+// devuelve todos los planes del usuario ordenados por fecha
 app.get('/api/plan/:usuario_id', verificarToken, (req, res) => {
   if (req.usuarioId !== parseInt(req.params.usuario_id)) return res.status(403).json({ error: 'Acceso denegado' });
   db.query('SELECT * FROM planes WHERE usuario_id = ? ORDER BY creado_en DESC', [req.params.usuario_id], (err, results) => {
@@ -208,7 +196,7 @@ app.get('/api/plan/:usuario_id', verificarToken, (req, res) => {
   });
 });
 
-// ─── PROXY IA (protegido) ─────────────
+// proxy hacia anthropic para que la api key nunca salga al cliente
 app.post('/api/generar-plan', verificarToken, async (req, res) => {
   const { prompt } = req.body;
   try {
@@ -232,7 +220,6 @@ app.post('/api/generar-plan', verificarToken, async (req, res) => {
   }
 });
 
-// ─── ARRANCAR SERVIDOR ────────────────
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor NutriGues corriendo en http://localhost:${PORT}`);
+  console.log(`servidor corriendo en puerto ${PORT}`);
 });

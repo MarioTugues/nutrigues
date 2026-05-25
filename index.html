@@ -10,7 +10,7 @@
 </head>
 <body>
 
-<!-- PANTALLA 1: LANDING -->
+<!-- pagina de inicio con las cards de funcionalidades -->
 <div id="screen-landing" class="screen active fade-in">
   <div class="landing-logo">Nutri<span>Gues</span></div>
   <div class="landing-tagline">Tu nutrición y entrenamiento con IA</div>
@@ -26,7 +26,7 @@
   </div>
 </div>
 
-<!-- PANTALLA 2: LOGIN -->
+<!-- formulario de login -->
 <div id="screen-login" class="screen">
   <div style="display:flex; justify-content:center; align-items:flex-start; flex:1; padding:2rem; overflow-y:auto;">
     <div class="form-card fade-in">
@@ -48,7 +48,7 @@
   </div>
 </div>
 
-<!-- PANTALLA 3: REGISTRO -->
+<!-- formulario de registro con todos los datos del perfil -->
 <div id="screen-register" class="screen">
   <div style="display:flex; justify-content:center; align-items:flex-start; flex:1; padding:2rem; overflow-y:auto;">
     <div class="form-card fade-in">
@@ -128,7 +128,7 @@
   </div>
 </div>
 
-<!-- PANTALLA 4: DASHBOARD -->
+<!-- dashboard principal con estadisticas y accesos rapidos -->
 <div id="screen-dashboard" class="screen">
   <nav class="navbar">
     <div class="navbar-logo">Nutri<span>Gues</span></div>
@@ -145,6 +145,7 @@
       <h1>¡Hola, <span id="dash-nombre">—</span>! 👋</h1>
       <p>Tu plan personalizado está listo.</p>
     </div>
+    <!-- tarjetas con los datos biometricos del usuario -->
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">Peso actual</div>
@@ -167,11 +168,11 @@
         <div class="stat-unit">&nbsp;</div>
       </div>
     </div>
+    <!-- los planes guardados se renderizan aqui desde app.js -->
     <div class="section-title planes-guardados-section">📋 Mis planes guardados</div>
     <div id="planes-guardados" style="margin-bottom:2rem;">
       <p style="color:var(--texto);font-size:0.9rem;">Aún no has generado ningún plan.</p>
     </div>
-
     <div class="section-title">🚀 Acciones rápidas</div>
     <div class="action-grid">
       <div class="action-card" onclick="showTab('plan'); setPlanType('nutricion')">
@@ -198,7 +199,7 @@
   </div>
 </div>
 
-<!-- PANTALLA 5: MI PLAN (IA) -->
+<!-- generador de planes con ia -->
 <div id="screen-plan" class="screen">
   <nav class="navbar">
     <div class="navbar-logo">Nutri<span>Gues</span></div>
@@ -212,6 +213,7 @@
   </nav>
   <div class="plan-content fade-in">
     <div class="section-title" style="font-size:1.4rem; margin-bottom:1.5rem;">✨ Planes con IA</div>
+    <!-- selector del tipo de plan -->
     <div class="plan-selector">
       <button class="plan-btn active" id="btn-nutricion" onclick="setPlanType('nutricion')">🥗 Nutrición</button>
       <button class="plan-btn" id="btn-entrenamiento" onclick="setPlanType('entrenamiento')">💪 Entrenamiento</button>
@@ -225,12 +227,13 @@
         <div class="spinner"></div>
         <span>Creando tu plan personalizado...</span>
       </div>
+      <!-- aqui aparece el resultado en markdown renderizado -->
       <div class="result-box" id="result-box"></div>
     </div>
   </div>
 </div>
 
-<!-- PANTALLA 6: SEGUIMIENTO -->
+<!-- seguimiento de peso con historial y grafica -->
 <div id="screen-tracking" class="screen">
   <nav class="navbar">
     <div class="navbar-logo">Nutri<span>Gues</span></div>
@@ -256,9 +259,11 @@
       <button class="btn-primary" onclick="registrarPeso()">Registrar</button>
     </div>
     <div class="section-title">📋 Historial</div>
+    <!-- los registros se pintan aqui desde renderPesos() -->
     <div class="progress-list" id="progress-list">
       <p style="color: var(--texto); font-size:0.9rem;">Aún no hay registros. ¡Añade tu primer peso!</p>
     </div>
+    <!-- la grafica de chart.js va aqui, se oculta si no hay datos -->
     <div class="chart-area" id="chart-area" style="display:none;">
       <div class="section-title" style="margin-bottom:1rem;">📈 Evolución</div>
       <canvas id="weightChart"></canvas>
@@ -266,7 +271,7 @@
   </div>
 </div>
 
-<!-- PANTALLA 7: TIENDA -->
+<!-- tienda de suplementos -->
 <div id="screen-tienda" class="screen">
   <nav class="navbar">
     <div class="navbar-logo">Nutri<span>Gues</span></div>
@@ -287,11 +292,12 @@
       </div>
       <div class="banner-icon">🛒</div>
     </div>
+    <!-- las cards de productos se generan desde renderProductos() -->
     <div class="productos-grid" id="productos-grid"></div>
   </div>
 </div>
 
-<!-- PANTALLA 8: PERFIL -->
+<!-- edicion de perfil y objetivos -->
 <div id="screen-perfil" class="screen">
   <nav class="navbar">
     <div class="navbar-logo">Nutri<span>Gues</span></div>
@@ -371,12 +377,12 @@
   </div>
 </div>
 
-<!-- CARRITO FLOTANTE -->
+<!-- boton flotante del carrito, solo visible cuando hay productos -->
 <div class="carrito-bar" id="carrito-bar" onclick="abrirCarrito()">
   🛒 <span id="carrito-count">0</span> productos · <span id="carrito-total-bar">0,00€</span>
 </div>
 
-<!-- MODAL CARRITO -->
+<!-- modal del carrito con formulario de pedido -->
 <div class="modal-overlay" id="modal-carrito">
   <div class="modal-card">
     <h3>🛒 Tu carrito</h3>
@@ -386,6 +392,7 @@
       <button class="btn-primary" onclick="mostrarFormPedido()">Finalizar pedido →</button>
       <button class="btn-secondary" onclick="cerrarCarrito()">Seguir comprando</button>
     </div>
+    <!-- formulario de datos de envio -->
     <div class="pedido-form" id="pedido-form">
       <div class="form-group">
         <label>Nombre completo</label>
@@ -416,6 +423,7 @@
       <button class="btn-primary" onclick="confirmarPedido()">Confirmar pedido ✓</button>
       <button class="btn-secondary" onclick="volverCarrito()">← Volver al carrito</button>
     </div>
+    <!-- mensaje de confirmacion tras el pedido -->
     <div class="pedido-confirmacion" id="pedido-confirmacion">
       <div class="check">✅</div>
       <h4>¡Pedido confirmado!</h4>
@@ -425,8 +433,7 @@
   </div>
 </div>
 
-
-<!-- MODAL PLAN GUARDADO -->
+<!-- modal para ver un plan guardado completo -->
 <div class="modal-plan" id="modal-plan">
   <div class="modal-plan-card">
     <h3 id="modal-plan-titulo">Plan</h3>
