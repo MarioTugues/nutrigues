@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NutriGues</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<!-- PANTALLA 1: LANDING -->
+<div id="screen-landing" class="screen active fade-in">
+  <div class="landing-logo">Nutri<span>Gues</span></div>
+  <div class="landing-tagline">Tu nutrición y entrenamiento con IA</div>
+  <div class="landing-cards">
+    <div class="landing-card"><div class="icon">🥗</div><div class="label">Planes de</div><div class="title">Nutrición</div></div>
+    <div class="landing-card"><div class="icon">💪</div><div class="label">Rutinas de</div><div class="title">Entrenamiento</div></div>
+    <div class="landing-card"><div class="icon">📊</div><div class="label">Seguimiento de</div><div class="title">Progreso</div></div>
+    <div class="landing-card"><div class="icon">🤖</div><div class="label">Powered by</div><div class="title">IA Avanzada</div></div>
+  </div>
+  <div>
+    <button class="btn-primary" onclick="showScreen('register')">Crear cuenta</button>
+    <button class="btn-secondary" onclick="showScreen('login')">Iniciar sesión</button>
+  </div>
+</div>
+
+<!-- PANTALLA 2: LOGIN -->
+<div id="screen-login" class="screen">
+  <div style="display:flex; justify-content:center; align-items:flex-start; flex:1; padding:2rem; overflow-y:auto;">
+    <div class="form-card fade-in">
+      <h2>Bienvenido</h2>
+      <p class="subtitle">Inicia sesión en tu cuenta NutriGues</p>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="tu@email.com" />
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" id="login-password" placeholder="••••••••" />
+      </div>
+      <div id="login-error" style="color:#ff6b6b; font-size:0.85rem; display:none; margin-bottom:0.5rem;"></div>
+      <button class="btn-primary" onclick="login()">Entrar →</button>
+      <div class="back-link">¿No tienes cuenta? <a onclick="showScreen('register')">Regístrate</a></div>
+      <div class="back-link"><a onclick="showScreen('landing')">← Volver</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- PANTALLA 3: REGISTRO -->
+<div id="screen-register" class="screen">
+  <div style="display:flex; justify-content:center; align-items:flex-start; flex:1; padding:2rem; overflow-y:auto;">
+    <div class="form-card fade-in">
+      <h2>Crea tu perfil</h2>
+      <p class="subtitle">NutriGues personalizará todo según tus datos</p>
+      <div class="form-group">
+        <label>Nombre</label>
+        <input type="text" id="reg-nombre" placeholder="Tu nombre" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="reg-email" placeholder="tu@email.com" />
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" id="reg-password" placeholder="••••••••" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Edad</label>
+          <input type="text" id="reg-edad" placeholder="25"/>
+        </div>
+        <div class="form-group">
+          <label>Sexo</label>
+          <select id="reg-sexo">
+            <option value="hombre">Hombre</option>
+            <option value="mujer">Mujer</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Peso (kg)</label>
+          <input type="text" id="reg-peso" placeholder="70" />
+        </div>
+        <div class="form-group">
+          <label>Altura (cm)</label>
+          <input type="text" id="reg-altura" placeholder="175" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Nivel de actividad</label>
+        <select id="reg-actividad">
+          <option value="sedentario">Sedentario (sin ejercicio)</option>
+          <option value="ligero">Ligero (1-2 días/semana)</option>
+          <option value="moderado" selected>Moderado (3-4 días/semana)</option>
+          <option value="activo">Activo (5+ días/semana)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Objetivo principal</label>
+        <select id="reg-objetivo">
+          <option value="perder peso">Perder peso</option>
+          <option value="ganar músculo">Ganar músculo</option>
+          <option value="mantenimiento">Mantenimiento</option>
+          <option value="mejorar resistencia">Mejorar resistencia</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Restricciones alimentarias</label>
+        <select id="reg-restricciones">
+          <option value="ninguna">Ninguna</option>
+          <option value="vegetariano">Vegetariano</option>
+          <option value="vegano">Vegano</option>
+          <option value="sin gluten">Sin gluten</option>
+          <option value="sin lactosa">Sin lactosa</option>
+        </select>
+      </div>
+      <div id="reg-error" style="color:#ff6b6b; font-size:0.85rem; display:none; margin-bottom:0.5rem;"></div>
+      <button class="btn-primary" onclick="registrar()">Crear mi perfil →</button>
+      <div class="back-link">¿Ya tienes cuenta? <a onclick="showScreen('login')">Inicia sesión</a></div>
+      <div class="back-link"><a onclick="showScreen('landing')">← Volver</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- PANTALLA 4: DASHBOARD -->
+<div id="screen-dashboard" class="screen">
+  <nav class="navbar">
+    <div class="navbar-logo">Nutri<span>Gues</span></div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="showTab('dashboard')">Inicio</button>
+      <button class="nav-tab" onclick="showTab('plan')">Mi Plan</button>
+      <button class="nav-tab" onclick="showTab('tracking')">Progreso</button>
+      <button class="nav-tab" onclick="showTab('tienda')">Tienda</button>
+    </div>
+    <div class="navbar-user">Hola, <strong id="nav-nombre">—</strong> · <a onclick="showTab('perfil')" style="color:var(--verde);cursor:pointer;">Mi perfil</a> · <a onclick="cerrarSesion()" style="color:#ff6b6b;cursor:pointer;">Salir</a></div>
+  </nav>
+  <div class="dashboard-content fade-in">
+    <div class="greeting">
+      <h1>¡Hola, <span id="dash-nombre">—</span>! 👋</h1>
+      <p>Tu plan personalizado está listo.</p>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Peso actual</div>
+        <div class="stat-value" id="dash-peso">—</div>
+        <div class="stat-unit">kg</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Altura</div>
+        <div class="stat-value" id="dash-altura">—</div>
+        <div class="stat-unit">cm</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">IMC</div>
+        <div class="stat-value" id="dash-imc">—</div>
+        <div class="stat-unit">índice</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Objetivo</div>
+        <div class="stat-value" style="font-size:1rem; padding-top:0.4rem;" id="dash-objetivo">—</div>
+        <div class="stat-unit">&nbsp;</div>
+      </div>
+    </div>
+    <div class="section-title planes-guardados-section">📋 Mis planes guardados</div>
+    <div id="planes-guardados" style="margin-bottom:2rem;">
+      <p style="color:var(--texto);font-size:0.9rem;">Aún no has generado ningún plan.</p>
+    </div>
+
+    <div class="section-title">🚀 Acciones rápidas</div>
+    <div class="action-grid">
+      <div class="action-card" onclick="showTab('plan'); setPlanType('nutricion')">
+        <div class="icon">🥗</div><h3>Generar Dieta</h3>
+        <p>Plan nutricional personalizado con IA</p>
+        <div class="tag">✨ IA</div>
+      </div>
+      <div class="action-card" onclick="showTab('plan'); setPlanType('entrenamiento')">
+        <div class="icon">💪</div><h3>Generar Rutina</h3>
+        <p>Entrenamiento adaptado a tu nivel</p>
+        <div class="tag">✨ IA</div>
+      </div>
+      <div class="action-card" onclick="showTab('tracking')">
+        <div class="icon">📊</div><h3>Registrar Peso</h3>
+        <p>Lleva el control de tu progreso</p>
+        <div class="tag">📈 Seguimiento</div>
+      </div>
+      <div class="action-card" onclick="showTab('perfil')">
+        <div class="icon">✏️</div><h3>Editar Perfil</h3>
+        <p>Cambia tu objetivo y datos personales</p>
+        <div class="tag">👤 Perfil</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PANTALLA 5: MI PLAN (IA) -->
+<div id="screen-plan" class="screen">
+  <nav class="navbar">
+    <div class="navbar-logo">Nutri<span>Gues</span></div>
+    <div class="nav-tabs">
+      <button class="nav-tab" onclick="showTab('dashboard')">Inicio</button>
+      <button class="nav-tab active" onclick="showTab('plan')">Mi Plan</button>
+      <button class="nav-tab" onclick="showTab('tracking')">Progreso</button>
+      <button class="nav-tab" onclick="showTab('tienda')">Tienda</button>
+    </div>
+    <div class="navbar-user"><strong id="nav-nombre2">—</strong></div>
+  </nav>
+  <div class="plan-content fade-in">
+    <div class="section-title" style="font-size:1.4rem; margin-bottom:1.5rem;">✨ Planes con IA</div>
+    <div class="plan-selector">
+      <button class="plan-btn active" id="btn-nutricion" onclick="setPlanType('nutricion')">🥗 Nutrición</button>
+      <button class="plan-btn" id="btn-entrenamiento" onclick="setPlanType('entrenamiento')">💪 Entrenamiento</button>
+      <button class="plan-btn" id="btn-consejos" onclick="setPlanType('consejos')">💡 Consejos</button>
+    </div>
+    <div class="generate-area">
+      <h3 id="plan-titulo">Plan de Nutrición</h3>
+      <p id="plan-desc">Genera un menú semanal personalizado basado en tu perfil y objetivos.</p>
+      <button class="btn-primary" onclick="generarPlan()">Generar plan →</button>
+      <div class="loading" id="loading-indicator">
+        <div class="spinner"></div>
+        <span>Creando tu plan personalizado...</span>
+      </div>
+      <div class="result-box" id="result-box"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PANTALLA 6: SEGUIMIENTO -->
+<div id="screen-tracking" class="screen">
+  <nav class="navbar">
+    <div class="navbar-logo">Nutri<span>Gues</span></div>
+    <div class="nav-tabs">
+      <button class="nav-tab" onclick="showTab('dashboard')">Inicio</button>
+      <button class="nav-tab" onclick="showTab('plan')">Mi Plan</button>
+      <button class="nav-tab active" onclick="showTab('tracking')">Progreso</button>
+      <button class="nav-tab" onclick="showTab('tienda')">Tienda</button>
+    </div>
+    <div class="navbar-user"><strong id="nav-nombre3">—</strong></div>
+  </nav>
+  <div class="tracking-content fade-in">
+    <div class="section-title" style="font-size:1.4rem; margin-bottom:1.5rem;">📊 Seguimiento de peso</div>
+    <div class="weight-form">
+      <div class="form-group">
+        <label>Peso (kg)</label>
+        <input type="number" id="track-peso" placeholder="70.5" step="0.1" />
+      </div>
+      <div class="form-group">
+        <label>Fecha</label>
+        <input type="date" id="track-fecha" />
+      </div>
+      <button class="btn-primary" onclick="registrarPeso()">Registrar</button>
+    </div>
+    <div class="section-title">📋 Historial</div>
+    <div class="progress-list" id="progress-list">
+      <p style="color: var(--texto); font-size:0.9rem;">Aún no hay registros. ¡Añade tu primer peso!</p>
+    </div>
+    <div class="chart-area" id="chart-area" style="display:none;">
+      <div class="section-title" style="margin-bottom:1rem;">📈 Evolución</div>
+      <canvas id="weightChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- PANTALLA 7: TIENDA -->
+<div id="screen-tienda" class="screen">
+  <nav class="navbar">
+    <div class="navbar-logo">Nutri<span>Gues</span></div>
+    <div class="nav-tabs">
+      <button class="nav-tab" onclick="showTab('dashboard')">Inicio</button>
+      <button class="nav-tab" onclick="showTab('plan')">Mi Plan</button>
+      <button class="nav-tab" onclick="showTab('tracking')">Progreso</button>
+      <button class="nav-tab active" onclick="showTab('tienda')">Tienda</button>
+    </div>
+    <div class="navbar-user"><strong id="nav-nombre4">—</strong></div>
+  </nav>
+  <div class="tienda-content fade-in">
+    <div class="section-title" style="font-size:1.4rem; margin-bottom:0.25rem;">🛒 Tienda de Suplementos</div>
+    <div class="tienda-banner">
+      <div>
+        <h2>Suplementos para tu objetivo 🏆</h2>
+        <p>Productos seleccionados según tu perfil · Envío gratis +50€</p>
+      </div>
+      <div class="banner-icon">🛒</div>
+    </div>
+    <div class="productos-grid" id="productos-grid"></div>
+  </div>
+</div>
+
+<!-- PANTALLA 8: PERFIL -->
+<div id="screen-perfil" class="screen">
+  <nav class="navbar">
+    <div class="navbar-logo">Nutri<span>Gues</span></div>
+    <div class="nav-tabs">
+      <button class="nav-tab" onclick="showTab('dashboard')">Inicio</button>
+      <button class="nav-tab" onclick="showTab('plan')">Mi Plan</button>
+      <button class="nav-tab" onclick="showTab('tracking')">Progreso</button>
+      <button class="nav-tab" onclick="showTab('tienda')">Tienda</button>
+    </div>
+    <div class="navbar-user"><strong id="nav-nombre5">—</strong></div>
+  </nav>
+  <div style="display:flex; justify-content:center; align-items:flex-start; flex:1; padding:2rem; overflow-y:auto;">
+    <div class="form-card fade-in" style="max-width:520px;">
+      <h2>✏️ Editar perfil</h2>
+      <p class="subtitle">Actualiza tus datos y objetivos</p>
+      <div class="form-group">
+        <label>Nombre</label>
+        <input type="text" id="edit-nombre" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Edad</label>
+          <input type="text" id="edit-edad" />
+        </div>
+        <div class="form-group">
+          <label>Sexo</label>
+          <select id="edit-sexo">
+            <option value="hombre">Hombre</option>
+            <option value="mujer">Mujer</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Peso (kg)</label>
+          <input type="text" id="edit-peso" />
+        </div>
+        <div class="form-group">
+          <label>Altura (cm)</label>
+          <input type="text" id="edit-altura" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Nivel de actividad</label>
+        <select id="edit-actividad">
+          <option value="sedentario">Sedentario (sin ejercicio)</option>
+          <option value="ligero">Ligero (1-2 días/semana)</option>
+          <option value="moderado">Moderado (3-4 días/semana)</option>
+          <option value="activo">Activo (5+ días/semana)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Objetivo principal</label>
+        <select id="edit-objetivo">
+          <option value="perder peso">Perder peso</option>
+          <option value="ganar músculo">Ganar músculo</option>
+          <option value="mantenimiento">Mantenimiento</option>
+          <option value="mejorar resistencia">Mejorar resistencia</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Restricciones alimentarias</label>
+        <select id="edit-restricciones">
+          <option value="ninguna">Ninguna</option>
+          <option value="vegetariano">Vegetariano</option>
+          <option value="vegano">Vegano</option>
+          <option value="sin gluten">Sin gluten</option>
+          <option value="sin lactosa">Sin lactosa</option>
+        </select>
+      </div>
+      <div id="edit-error" style="color:#ff6b6b; font-size:0.85rem; display:none; margin-bottom:0.5rem;"></div>
+      <div id="edit-ok" style="color:var(--verde); font-size:0.85rem; display:none; margin-bottom:0.5rem;">✅ Perfil actualizado correctamente</div>
+      <button class="btn-primary" onclick="guardarPerfil()">Guardar cambios →</button>
+      <div class="back-link"><a onclick="showTab('dashboard')">← Volver al inicio</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- CARRITO FLOTANTE -->
+<div class="carrito-bar" id="carrito-bar" onclick="abrirCarrito()">
+  🛒 <span id="carrito-count">0</span> productos · <span id="carrito-total-bar">0,00€</span>
+</div>
+
+<!-- MODAL CARRITO -->
+<div class="modal-overlay" id="modal-carrito">
+  <div class="modal-card">
+    <h3>🛒 Tu carrito</h3>
+    <div id="carrito-items"></div>
+    <div class="carrito-total">Total: <span id="carrito-total-modal">0,00€</span></div>
+    <div id="vista-carrito">
+      <button class="btn-primary" onclick="mostrarFormPedido()">Finalizar pedido →</button>
+      <button class="btn-secondary" onclick="cerrarCarrito()">Seguir comprando</button>
+    </div>
+    <div class="pedido-form" id="pedido-form">
+      <div class="form-group">
+        <label>Nombre completo</label>
+        <input type="text" id="ped-nombre" placeholder="Tu nombre" />
+      </div>
+      <div class="form-group">
+        <label>Dirección de envío</label>
+        <input type="text" id="ped-direccion" placeholder="Calle, número, ciudad" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Teléfono</label>
+          <input type="text" id="ped-telefono" placeholder="600 000 000" />
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="ped-email" placeholder="tu@email.com" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Método de pago</label>
+        <select id="ped-pago">
+          <option value="tarjeta">Tarjeta bancaria</option>
+          <option value="paypal">PayPal</option>
+          <option value="transferencia">Transferencia bancaria</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="confirmarPedido()">Confirmar pedido ✓</button>
+      <button class="btn-secondary" onclick="volverCarrito()">← Volver al carrito</button>
+    </div>
+    <div class="pedido-confirmacion" id="pedido-confirmacion">
+      <div class="check">✅</div>
+      <h4>¡Pedido confirmado!</h4>
+      <p>Te enviaremos un email con los detalles del pedido.</p>
+      <button class="btn-primary" style="margin-top:1rem;" onclick="cerrarCarrito(); limpiarCarrito()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL PLAN GUARDADO -->
+<div class="modal-plan" id="modal-plan">
+  <div class="modal-plan-card">
+    <h3 id="modal-plan-titulo">Plan</h3>
+    <div class="fecha" id="modal-plan-fecha"></div>
+    <div class="contenido" id="modal-plan-contenido"></div>
+    <button class="btn-primary" style="margin-top:1.5rem;" onclick="cerrarModalPlan()">Cerrar</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
