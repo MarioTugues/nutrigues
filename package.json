@@ -1,15 +1,16 @@
 {
-  "name": "tfg-nutricion",
+  "name": "nutrigues",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "start": "node server.js"
-  },
-  "keywords": [],
-  "author": "",
+  "description": "Aplicación web de nutrición y entrenamiento personalizado con IA",
+  "main": "server.js",
+  "author": "Mario Tugues",
   "license": "ISC",
   "type": "commonjs",
+  "keywords": ["nutricion", "fitness", "ia", "anthropic", "node"],
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
