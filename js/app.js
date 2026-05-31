@@ -482,20 +482,69 @@ function volverCarrito() {
   document.getElementById('vista-carrito').style.display = 'block';
 }
 
-// valida los campos y muestra la confirmacion del pedido
-function confirmarPedido() {
+// ── MODIFICADO: envia el carrito a Stripe en lugar de simular el pago ──
+async function confirmarPedido() {
   const nombre    = document.getElementById('ped-nombre').value.trim();
   const direccion = document.getElementById('ped-direccion').value.trim();
   const telefono  = document.getElementById('ped-telefono').value.trim();
   const email     = document.getElementById('ped-email').value.trim();
-  if (!nombre || !direccion || !telefono || !email) { alert('Por favor, rellena todos los campos del pedido.'); return; }
-  document.getElementById('pedido-form').classList.remove('visible');
-  document.getElementById('pedido-confirmacion').classList.add('visible');
+
+  if (!nombre || !direccion || !telefono || !email) {
+    alert('Por favor, rellena todos los campos del pedido.');
+    return;
+  }
+
+  const btn = document.querySelector('#pedido-form .btn-primary');
+  if (btn) { btn.disabled = true; btn.textContent = 'Redirigiendo al pago…'; }
+
+  try {
+    const res = await fetch(`${API}/pagos/checkout`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ items: carrito, nombre, email, direccion, telefono }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error || 'Error al procesar el pago.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Confirmar pedido ✓'; }
+      return;
+    }
+
+    // redirigimos a la pagina de pago de Stripe
+    window.location.href = data.url;
+
+  } catch (err) {
+    console.error('Error de red:', err);
+    alert('Error de conexión. Inténtalo de nuevo.');
+    if (btn) { btn.disabled = false; btn.textContent = 'Confirmar pedido ✓'; }
+  }
 }
 
 function limpiarCarrito() {
   carrito = [];
   actualizarCarritoBar();
+}
+
+// ── AÑADIDO: detecta si el usuario vuelve de Stripe ──
+function procesarRetornoPedido() {
+  const params = new URLSearchParams(window.location.search);
+  const estado = params.get('pedido');
+
+  if (estado === 'ok') {
+    window.history.replaceState({}, '', '/');
+    limpiarCarrito();
+    document.getElementById('modal-carrito').classList.add('visible');
+    document.getElementById('vista-carrito').style.display       = 'none';
+    document.getElementById('pedido-form').classList.remove('visible');
+    document.getElementById('pedido-confirmacion').classList.add('visible');
+  }
+
+  if (estado === 'cancelado') {
+    window.history.replaceState({}, '', '/');
+    alert('Pago cancelado. Tu carrito sigue guardado.');
+  }
 }
 
 // rellena el formulario de edicion con los datos actuales del usuario
@@ -555,6 +604,9 @@ function mostrarError(id, msg) {
 // al cargar la pagina intentamos recuperar la sesion guardada
 window.onload = async () => {
   document.getElementById('track-fecha').value = new Date().toISOString().split('T')[0];
+
+  // ── AÑADIDO: comprobamos si venimos de un pago de Stripe ──
+  procesarRetornoPedido();
 
   const sesion = localStorage.getItem('nutrigues-sesion');
   if (sesion) {
