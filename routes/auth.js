@@ -92,4 +92,13 @@ router.post('/login', (req, res) => {
   });
 });
 
+// ruta temporal para verificar cuenta - borrar despues
+router.get('/verificar-admin', (req, res) => {
+  const { email } = req.query;
+  db.query('UPDATE usuarios SET verificado = 1 WHERE email = ?', [email], (err) => {
+    if (err) return res.send('error');
+    res.send('cuenta verificada');
+  });
+});
+
 module.exports = router;
