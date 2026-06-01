@@ -55,9 +55,12 @@ function crearTablas() {
   db.query(sqlPesos,    (err) => { if (err) console.error('error tabla pesos:', err.message); });
   db.query(sqlPlanes,   (err) => { if (err) console.error('error tabla planes:', err.message); });
 
-  // añadimos las columnas si la tabla ya existia sin ellas
-  db.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS verificado TINYINT DEFAULT 0`, (err) => {});
-  db.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS token_verificacion VARCHAR(255) DEFAULT NULL`, (err) => {});
+  db.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS verificado TINYINT DEFAULT 0`, (err) => {
+    if (err) console.error('error alter verificado:', err.message);
+  });
+  db.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS token_verificacion VARCHAR(255) DEFAULT NULL`, (err) => {
+    if (err) console.error('error alter token:', err.message);
+  });
 }
 
 module.exports = db;
