@@ -18,18 +18,20 @@ db.connect((err) => {
 function crearTablas() {
   const sqlUsuarios = `
     CREATE TABLE IF NOT EXISTS usuarios (
-      id            INT AUTO_INCREMENT PRIMARY KEY,
-      nombre        VARCHAR(100) NOT NULL,
-      email         VARCHAR(100) NOT NULL UNIQUE,
-      password      VARCHAR(255) NOT NULL,
-      edad          INT,
-      sexo          VARCHAR(20),
-      peso          FLOAT,
-      altura        FLOAT,
-      actividad     VARCHAR(50),
-      objetivo      VARCHAR(100),
-      restricciones VARCHAR(100),
-      creado_en     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      id                  INT AUTO_INCREMENT PRIMARY KEY,
+      nombre              VARCHAR(100) NOT NULL,
+      email               VARCHAR(100) NOT NULL UNIQUE,
+      password            VARCHAR(255) NOT NULL,
+      edad                INT,
+      sexo                VARCHAR(20),
+      peso                FLOAT,
+      altura              FLOAT,
+      actividad           VARCHAR(50),
+      objetivo            VARCHAR(100),
+      restricciones       VARCHAR(100),
+      verificado          TINYINT DEFAULT 0,
+      token_verificacion  VARCHAR(255) DEFAULT NULL,
+      creado_en           TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )`;
   const sqlPesos = `
     CREATE TABLE IF NOT EXISTS registros_peso (
@@ -52,6 +54,10 @@ function crearTablas() {
   db.query(sqlUsuarios, (err) => { if (err) console.error('error tabla usuarios:', err.message); });
   db.query(sqlPesos,    (err) => { if (err) console.error('error tabla pesos:', err.message); });
   db.query(sqlPlanes,   (err) => { if (err) console.error('error tabla planes:', err.message); });
+
+  // añadimos las columnas si la tabla ya existia sin ellas
+  db.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS verificado TINYINT DEFAULT 0`, (err) => {});
+  db.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS token_verificacion VARCHAR(255) DEFAULT NULL`, (err) => {});
 }
 
 module.exports = db;

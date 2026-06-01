@@ -55,14 +55,10 @@ async function registrar() {
     });
     const data = await res.json();
     if (!res.ok) { mostrarError('reg-error', data.error); return; }
-    usuario = data.usuario || data;
-    // guardamos el token jwt para las siguientes peticiones
-    if (data.token) localStorage.setItem('nutrigues-token', data.token);
-    guardarSesion();
-    await cargarPesos();
-    await cargarPlanes();
-    cargarDashboard();
-    showScreen('dashboard');
+    // el registro ahora no hace login automatico, hay que verificar el email primero
+    mostrarError('reg-error', '');
+    alert('Cuenta creada. Revisa tu email para verificarla antes de entrar.');
+    showScreen('login');
   } catch (err) {
     mostrarError('reg-error', 'Error de conexión con el servidor.');
   }
@@ -482,7 +478,7 @@ function volverCarrito() {
   document.getElementById('vista-carrito').style.display = 'block';
 }
 
-// ── MODIFICADO: envia el carrito a Stripe en lugar de simular el pago ──
+// envia el carrito a Stripe y redirige al usuario a la pagina de pago
 async function confirmarPedido() {
   const nombre    = document.getElementById('ped-nombre').value.trim();
   const direccion = document.getElementById('ped-direccion').value.trim();
@@ -527,7 +523,7 @@ function limpiarCarrito() {
   actualizarCarritoBar();
 }
 
-// ── AÑADIDO: detecta si el usuario vuelve de Stripe ──
+// detecta si el usuario vuelve de Stripe con ?pedido=ok o ?pedido=cancelado
 function procesarRetornoPedido() {
   const params = new URLSearchParams(window.location.search);
   const estado = params.get('pedido');
@@ -544,6 +540,16 @@ function procesarRetornoPedido() {
   if (estado === 'cancelado') {
     window.history.replaceState({}, '', '/');
     alert('Pago cancelado. Tu carrito sigue guardado.');
+  }
+}
+
+// detecta si el usuario viene del enlace de verificacion de email
+function procesarVerificacion() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('verificado') === 'ok') {
+    window.history.replaceState({}, '', '/');
+    alert('¡Email verificado! Ya puedes iniciar sesión.');
+    showScreen('login');
   }
 }
 
@@ -598,15 +604,15 @@ async function guardarPerfil() {
 // muestra un mensaje de error en el elemento con el id dado
 function mostrarError(id, msg) {
   const el = document.getElementById(id);
-  if (el) { el.textContent = msg; el.style.display = 'block'; }
+  if (el) { el.textContent = msg; el.style.display = msg ? 'block' : 'none'; }
 }
 
 // al cargar la pagina intentamos recuperar la sesion guardada
 window.onload = async () => {
   document.getElementById('track-fecha').value = new Date().toISOString().split('T')[0];
 
-  // ── AÑADIDO: comprobamos si venimos de un pago de Stripe ──
   procesarRetornoPedido();
+  procesarVerificacion();
 
   const sesion = localStorage.getItem('nutrigues-sesion');
   if (sesion) {
