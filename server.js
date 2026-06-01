@@ -1,4 +1,4 @@
-require('dotenv').config();
+if (process.env.NODE_ENV !== 'production') require('dotenv').config();
 
 const express = require('express');
 const cors    = require('cors');
@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 
-// ── AÑADIDO: el webhook de Stripe necesita el body RAW, antes de express.json() ──
+// el webhook de stripe necesita el body sin parsear, por eso va antes del express.json()
 app.use('/api/pagos/webhook', express.raw({ type: 'application/json' }));
 
 app.use(express.json());
@@ -24,7 +24,7 @@ app.use('/api/peso', require('./routes/pesos'));
 app.use('/api/plan', require('./routes/planes'));
 app.use('/api', require('./routes/ia'));
 
-// ruta de pagos Stripe 
+// ruta de pagos stripe
 app.use('/api/pagos', require('./routes/pagos'));
 
 app.listen(PORT, () => {
