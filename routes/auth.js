@@ -1,28 +1,20 @@
-const express      = require('express');
-const bcrypt       = require('bcryptjs');
-const jwt          = require('jsonwebtoken');
-const crypto       = require('crypto');
-const nodemailer   = require('nodemailer');
-const db           = require('../db');
+const express  = require('express');
+const bcrypt   = require('bcryptjs');
+const jwt      = require('jsonwebtoken');
+const crypto   = require('crypto');
+const { Resend } = require('resend');
+const db       = require('../db');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'nutrigues_secret_2026';
 const BASE_URL   = process.env.BASE_URL   || 'http://localhost:3000';
-
-// configuracion del transporte de email con gmail
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS,
-  }
-});
+const resend     = new Resend(process.env.RESEND_API_KEY);
 
 // manda el email de verificacion al usuario recien registrado
 async function enviarEmailVerificacion(email, nombre, token) {
   const enlace = `${BASE_URL}/api/verificar?token=${token}`;
-  await transporter.sendMail({
-    from:    `"NutriGues" <${process.env.GMAIL_USER}>`,
+  await resend.emails.send({
+    from:    'NutriGues <onboarding@resend.dev>',
     to:      email,
     subject: 'Verifica tu cuenta de NutriGues',
     html: `
