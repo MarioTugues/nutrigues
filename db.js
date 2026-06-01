@@ -55,11 +55,22 @@ function crearTablas() {
   db.query(sqlPesos,    (err) => { if (err) console.error('error tabla pesos:', err.message); });
   db.query(sqlPlanes,   (err) => { if (err) console.error('error tabla planes:', err.message); });
 
-  db.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS verificado TINYINT DEFAULT 0`, (err) => {
-    if (err) console.error('error alter verificado:', err.message);
+  // añadimos las columnas si no existen (railway no soporta IF NOT EXISTS en ALTER TABLE)
+  db.query(`SHOW COLUMNS FROM usuarios LIKE 'verificado'`, (err, rows) => {
+    if (!rows || rows.length === 0) {
+      db.query(`ALTER TABLE usuarios ADD COLUMN verificado TINYINT DEFAULT 0`, (err) => {
+        if (err) console.error('error alter verificado:', err.message);
+        else console.log('columna verificado añadida');
+      });
+    }
   });
-  db.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS token_verificacion VARCHAR(255) DEFAULT NULL`, (err) => {
-    if (err) console.error('error alter token:', err.message);
+  db.query(`SHOW COLUMNS FROM usuarios LIKE 'token_verificacion'`, (err, rows) => {
+    if (!rows || rows.length === 0) {
+      db.query(`ALTER TABLE usuarios ADD COLUMN token_verificacion VARCHAR(255) DEFAULT NULL`, (err) => {
+        if (err) console.error('error alter token:', err.message);
+        else console.log('columna token_verificacion añadida');
+      });
+    }
   });
 }
 
