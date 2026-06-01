@@ -36,6 +36,11 @@ async function registrar() {
     return;
   }
 
+  if (!email.includes('@')) {
+    mostrarError('reg-error', 'Introduce un email válido.');
+    return;
+  }
+
   const datos = {
     nombre, email, password,
     edad:          document.getElementById('reg-edad').value,
@@ -55,10 +60,13 @@ async function registrar() {
     });
     const data = await res.json();
     if (!res.ok) { mostrarError('reg-error', data.error); return; }
-    // el registro ahora no hace login automatico, hay que verificar el email primero
-    mostrarError('reg-error', '');
-    alert('Cuenta creada. Revisa tu email para verificarla antes de entrar.');
-    showScreen('login');
+    usuario = data.usuario;
+    localStorage.setItem('nutrigues-token', data.token);
+    guardarSesion();
+    await cargarPesos();
+    await cargarPlanes();
+    cargarDashboard();
+    showScreen('dashboard');
   } catch (err) {
     mostrarError('reg-error', 'Error de conexión con el servidor.');
   }
@@ -70,6 +78,11 @@ async function login() {
   const password = document.getElementById('login-password').value;
 
   if (!email || !password) { mostrarError('login-error', 'Introduce email y contraseña.'); return; }
+
+  if (!email.includes('@')) {
+    mostrarError('login-error', 'Introduce un email válido.');
+    return;
+  }
 
   try {
     const res  = await fetch(`${API}/login`, {
@@ -543,16 +556,6 @@ function procesarRetornoPedido() {
   }
 }
 
-// detecta si el usuario viene del enlace de verificacion de email
-function procesarVerificacion() {
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('verificado') === 'ok') {
-    window.history.replaceState({}, '', '/');
-    alert('¡Email verificado! Ya puedes iniciar sesión.');
-    showScreen('login');
-  }
-}
-
 // rellena el formulario de edicion con los datos actuales del usuario
 function abrirPerfil() {
   const n5 = document.getElementById('nav-nombre5');
@@ -612,7 +615,6 @@ window.onload = async () => {
   document.getElementById('track-fecha').value = new Date().toISOString().split('T')[0];
 
   procesarRetornoPedido();
-  procesarVerificacion();
 
   const sesion = localStorage.getItem('nutrigues-sesion');
   if (sesion) {
